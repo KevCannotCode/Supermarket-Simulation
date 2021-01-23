@@ -1,0 +1,2 @@
+# Supermarket-Simulation
+The simulation displays the percentage of time each register spent working on customers, rather than idle. The simulation program here has two ways to convey information. The express lane is red, the other lanes black; smart shoppers are green, others are gray. The size of the rectangle for a shopper indicates how many items the shopper has in their basket. The simulation uses a queue with a circular array and the cash register class to interacts with the GUI using lambda expression and anonymous classes.
