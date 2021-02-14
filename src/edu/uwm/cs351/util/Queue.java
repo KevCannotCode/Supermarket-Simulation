@@ -30,16 +30,16 @@ public class Queue<E> implements Cloneable {
 		if(_data == null) return report("data array was null");
 		// 1. head and tail must be in range
 		// TODO
-		if(_head < 0 || _head > _data.length -1) return report("head was out of bounds");
-		if(_tail < 0 || _tail > _data.length -1) return report("tail was out of bounds");
+		if(_head < 0 || _head >= _data.length ) return report("head was out of bounds");
+		if(_tail < 0 || _tail >= _data.length ) return report("tail was out of bounds");
 		// 2. If head doesn't equal tail, there are no null elements in range [head, tail)
 		//			NB: This range *may* wrap around end of array.
 		if(_tail != _head) {
 			int index = _head;
 			while(index != _tail) {
 				if(_data[index] == null) return report("A null value was found in the range [head,tail]");
-				if(index +1 == _data.length) index = -1;//we go back to 0 when we reach the end of the array
 				index++;
+				if(index == _data.length) index = 0;//we go back to 0 when we reach the end of the array
 			}
 		}
 		// TODO
@@ -52,9 +52,9 @@ public class Queue<E> implements Cloneable {
 	/** Create an empty Queue with capacity DEFAULT_CAPACITY. */
 	public Queue() {
 		//TODO
-		_head = _tail = 0;
 		_data = makeArray(DEFAULT_CAPACITY);
-		//assert wellFormed() : "invariant broken at start of Queue()";
+		_head = _tail = 0;
+		assert wellFormed() : "invariant broken after constructor";
 	}
 
 	@SuppressWarnings("unchecked")
@@ -68,17 +68,17 @@ public class Queue<E> implements Cloneable {
 	 */
 	public boolean isEmpty() {
 		//TODO (no loops, no ifs!)
-		//assert wellFormed() : "invariant broken at start of isEpmty()";
-		return (_data[_head] == null );// If something is wrong here try adding && _data[_tail] == null
+		assert wellFormed() : "invariant broken at start of isEpmty()";
+		return _head == _tail;
 	}
 
 	/**
 	 * Compute how many elements are in the queue.
 	 * @return how many elements are in this queue
 	 */
-	public int size() { //got help from a satckoverflow 
-		// TODO (no loops, one "if" permitted)
-	//	assert wellFormed() : "invariant broken at start of size()";
+	public int size() { //got help from a satckoverflow
+		// TODO 
+			assert wellFormed() : "invariant broken at start of size()";
 		int wrap = _data.length;
 		if(!isEmpty()) 
 			return (wrap-_head+_tail)%wrap;
@@ -92,11 +92,11 @@ public class Queue<E> implements Cloneable {
 	 */
 	public void enqueue(E x) {
 		// TODO (no loops, no ifs)
-		//assert wellFormed() : "invariant broken at start of enqueue()";
+		assert wellFormed() : "invariant broken at start of enqueue()";
 		ensureCapacity(size()+1);
 		_data[_tail] = x;
 		_tail = nextIndex(_tail);
-		//assert wellFormed() : "invariant broken at end of enqueue()";
+		assert wellFormed() : "invariant broken at end of enqueue()";
 	}
 
 	/**
@@ -106,7 +106,7 @@ public class Queue<E> implements Cloneable {
 	 */
 	public E front() {
 		// TODO (no loops, "if" only for error)
-		//assert wellFormed() : "invariant broken at start of front()";
+		assert wellFormed() : "invariant broken at start of front()";
 		if(isEmpty()) throw new NoSuchElementException("the queue is empty");
 		return _data[_head];
 	}
@@ -117,15 +117,14 @@ public class Queue<E> implements Cloneable {
 	 * @exception NoSuchElementException if the queue is empty
 	 */
 	public E dequeue() {
-		//assert wellFormed() : "invariant broken at start of dequeue()";
-		
+		assert wellFormed() : "invariant broken at start of dequeue()";
+
 		if(isEmpty()) throw new NoSuchElementException("the queue is empty");
 		// TODO (no loops, "if" only for error)
 		E element = _data[_head];
-		_data[_head] = null; 
 		_head = nextIndex(_head);
-		
-		//assert wellFormed() : "invariant broken at start of dequeue()";
+
+		assert wellFormed() : "invariant broken at start of dequeue()";
 		return element;
 	}
 
@@ -153,9 +152,8 @@ public class Queue<E> implements Cloneable {
 	 */
 	private int nextIndex(int i) {
 		// TODO (no loops, one "if" permitted)
-		//if(isEmpty()) return i;
 		return i+1 == _data.length ? 0 : ++i;
-		}
+	}
 
 	/**
 	 * Ensure that the capacity of the array is such that
@@ -168,31 +166,34 @@ public class Queue<E> implements Cloneable {
 	 */
 	private void ensureCapacity(int minCap) {
 		// TODO
-		//assert wellFormed() : "invariant broken at start of ensureCapacity()";
-		if(_data.length == 0) {//special case for the first time we use this method (when the array's size = 1)
-			_data = makeArray(minCap+1);
-			return;
-		}
+		assert wellFormed() : "invariant broken at start of ensureCapacity()";
+//		if(_data.length == 0) {//special case for the first time we use this method (when the array's size = 1)
+//			_data = makeArray(minCap+1);
+//			return;
+//		}
 
 		if(minCap < _data.length) return;//there is enough space so we don't do anything
 
 		int newSize = _data.length*2;
-		if(minCap > newSize) newSize = minCap+1; // if doubling is not enough we set the new size to the mincapacity +1 which is the array slot we must reserve
+		if(minCap >= newSize) newSize = minCap+1; // if doubling is not enough we set the new size to the mincapacity +1 
+		//which is the array slot we must reserve
 		//we are copying elements until we reach tail at the break statement. If the index reaches the end of the array it goes back to 0
 		E[] copy = makeArray(newSize);
 		int copyIndex = 0;
 		int i = _head;
-		while(true) {
-			copy[copyIndex] = _data[i];
-			if(i == _tail) break;
-			i = i+1 == _data.length? -1 : i;
-			i++;
+		int oldSize = size();
+		while(copyIndex < oldSize) {
+			copy[copyIndex] = _data[_head];
+//			if(i == _tail) break;
+//			i = i+1 == _data.length? -1 : i;
+//			i++;
+			_head = nextIndex(_head);
 			copyIndex++;
 		}
 		_head = 0;
 		_tail = copyIndex;
 		_data = copy;
-		//assert wellFormed() : "invariant broken at end of ensureCapacity()";
+		assert wellFormed() : "invariant broken at end of ensureCapacity()";
 	}
 
 	public static class TestInvariant extends LockedTestCase {
