@@ -31,7 +31,7 @@ public class CashRegister implements Runnable {
 
 	public void enqueue(final Shopper shopper) {
 		// TODO
-		// Add a new shopper to the queue. Remember that th   e
+		// Add a new shopper to the queue. Remember that the
 		// queue can only be accessed inside the UI thread.
 		Utilities.invokeUI( () -> queue.enqueue(shopper));
 	}
